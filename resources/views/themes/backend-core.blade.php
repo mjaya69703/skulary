@@ -252,6 +252,7 @@ $watch('darkMode', value => localStorage.setItem('darkMode', JSON.stringify(valu
                     <!-- Breadcrumb End -->
 
                     <div class="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
+                        @include('themes.components.alerts')
                         @yield('content')
                     </div>
                 </div>
