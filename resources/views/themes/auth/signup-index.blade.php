@@ -9,15 +9,7 @@
         </p>
     </div>
     <div>
-        <div class="relative py-3 sm:py-5">
-            <div class="absolute inset-0 flex items-center">
-                <div class="w-full border-t border-gray-200 dark:border-gray-800"></div>
-            </div>
-            <div class="relative flex justify-center text-sm">
-                <span class="p-2 text-gray-400 bg-white dark:bg-gray-900 sm:px-5 sm:py-2">Create Account</span>
-            </div>
-        </div>
-        <form action="{{ route('auth.handle-signup') }}" method="POST">
+        <form action="{{ route('auth.signup-handle') }}" method="POST">
             @csrf
             <div class="space-y-5">
                 <!-- Full Name -->
@@ -135,7 +127,7 @@
         <div class="mt-5">
             <p class="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
                 Already have an account?
-                <a href="{{ route('auth.login') }}" class="text-brand-500 hover:text-brand-600 dark:text-brand-400">Sign In</a>
+                <a href="{{ route('auth.signin-index') }}" class="text-brand-500 hover:text-brand-600 dark:text-brand-400">Sign In</a>
             </p>
         </div>
     </div>

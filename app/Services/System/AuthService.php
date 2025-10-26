@@ -170,4 +170,40 @@ class AuthService
 
         return $username;
     }
+
+    /**
+     * Get user roles.
+     *
+     * @param User $user
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getUserRoles(User $user)
+    {
+        return $user->roles;
+    }
+
+    /**
+     * Check if user has multiple roles.
+     *
+     * @param User $user
+     * @return bool
+     */
+    public function hasMultipleRoles(User $user): bool
+    {
+        return $user->roles()->count() > 1;
+    }
+
+    /**
+     * Get user's single role (if only one role).
+     *
+     * @param User $user
+     * @return \Spatie\Permission\Models\Role|null
+     */
+    public function getSingleRole(User $user)
+    {
+        if ($user->roles()->count() === 1) {
+            return $user->roles()->first();
+        }
+        return null;
+    }
 }
