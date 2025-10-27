@@ -3,10 +3,12 @@
 namespace App\Services\System;
 
 use App\Models\User;
+use App\Mail\WelcomeMail;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class AuthService
 {
@@ -208,5 +210,25 @@ class AuthService
             return $user->roles()->first();
         }
         return null;
+    }
+
+    /**
+     * Send welcome email to newly registered user.
+     *
+     * @param User $user
+     * @return bool
+     */
+    public function sendWelcomeEmail(User $user): bool
+    {
+        try {
+            Mail::send(new WelcomeMail($user));
+            return true;
+        } catch (\Throwable $th) {
+            Log::error('Failed to send welcome email: ' . $th->getMessage(), [
+                'user_id' => $user->id,
+                'exception' => $th,
+            ]);
+            return false;
+        }
     }
 }

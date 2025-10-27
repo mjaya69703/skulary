@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 use App\Http\Requests\System\AuthRequest;
 use App\Http\Requests\System\RegisterRequest;
 use App\Services\System\AuthService;
-use App\Mail\ForgotPasswordMail;
+use App\Mail\Auth\ForgotPasswordMail;
 // Use Models
 use App\Models\User;
 
@@ -110,7 +110,10 @@ class AuthController extends Controller
         $result = $authService->register($data);
 
         if ($result['success']) {
-            return redirect()->route('auth.signin-index')->with('success', $result['message']);
+            // Send welcome email
+            $authService->sendWelcomeEmail($result['user']);
+            
+            return redirect()->route('auth.signin-index')->with('success', 'Account created successfully! Check your email for welcome message. Please sign in.');
         }
 
         // Return back with error
