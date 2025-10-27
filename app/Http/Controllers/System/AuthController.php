@@ -110,7 +110,7 @@ class AuthController extends Controller
         $result = $authService->register($data);
 
         if ($result['success']) {
-            return redirect()->route('auth.login')->with('success', $result['message']);
+            return redirect()->route('auth.signin-index')->with('success', $result['message']);
         }
 
         // Return back with error

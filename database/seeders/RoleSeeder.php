@@ -41,6 +41,13 @@ class RoleSeeder extends Seeder
                 'label' => 'Orang Tua',
                 'description' => 'User with parent access rights',
             ],
+            [
+                'name' => 'peserta-ppdb',
+                'guard_name' => 'web',
+                'icon' => 'fas fa-user-tie',
+                'label' => 'Peserta PPDB',
+                'description' => 'User with PPDB participant access rights',
+            ],
         ];
 
         foreach ($data as $role) {

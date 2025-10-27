@@ -33,7 +33,43 @@ Route::middleware(['auth', 'active_role:admin'])->prefix('admin')->as('admin.')-
 
 });
 
+Route::middleware(['auth', 'active_role:guru'])->prefix('guru')->as('guru.')->group(function () {
+
+    Route::get('/dashboard', [App\Http\Controllers\Guru\DashboardController::class, 'index'])->name('dashboard-index');
+    Route::get('/blank', function () {
+        $pages = 'Blank Page';
+        $menus = 'Unknown Menu';
+
+        return view('themes.blank-page', compact('pages', 'menus'));
+    })->name('blank-index');
+
+});
+
+Route::middleware(['auth', 'active_role:parents'])->prefix('parents')->as('parents.')->group(function () {
+
+    Route::get('/dashboard', [App\Http\Controllers\Parents\DashboardController::class, 'index'])->name('dashboard-index');
+    Route::get('/blank', function () {
+        $pages = 'Blank Page';
+        $menus = 'Unknown Menu';
+
+        return view('themes.blank-page', compact('pages', 'menus'));
+    })->name('blank-index');
+
+});
+
 Route::middleware(['auth', 'active_role:siswa'])->prefix('siswa')->as('siswa.')->group(function () {
+
+    Route::get('/dashboard', [App\Http\Controllers\Siswa\DashboardController::class, 'index'])->name('dashboard-index');
+    Route::get('/blank', function () {
+        $pages = 'Blank Page';
+        $menus = 'Unknown Menu';
+
+        return view('themes.blank-page', compact('pages', 'menus'));
+    })->name('blank-index');
+
+});
+
+Route::middleware(['auth', 'active_role:peserta-ppdb'])->prefix('peserta-ppdb')->as('peserta-ppdb.')->group(function () {
 
     Route::get('/dashboard', [App\Http\Controllers\Siswa\DashboardController::class, 'index'])->name('dashboard-index');
     Route::get('/blank', function () {

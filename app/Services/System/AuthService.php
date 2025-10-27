@@ -3,6 +3,7 @@
 namespace App\Services\System;
 
 use App\Models\User;
+use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -130,6 +131,8 @@ class AuthService
                 'username' => $this->generateUsername($data['email']),
                 'password' => \Illuminate\Support\Facades\Hash::make($data['password']),
             ]);
+
+            Role::findByName('peserta-ppdb')->users()->attach($user->id);
 
             return [
                 'success' => true,
