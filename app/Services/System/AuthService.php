@@ -3,7 +3,8 @@
 namespace App\Services\System;
 
 use App\Models\User;
-use App\Mail\WelcomeMail;
+use App\Mail\Auth\WelcomeMail;
+use App\Mail\Auth\VerifyEmailMail;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -225,6 +226,113 @@ class AuthService
             return true;
         } catch (\Throwable $th) {
             Log::error('Failed to send welcome email: ' . $th->getMessage(), [
+                'user_id' => $user->id,
+                'exception' => $th,
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Save user biodata from first setup.
+     *
+     * @param User $user
+     * @param array $data Biodata from FirstSetupRequest
+     * @return bool
+     */
+    public function saveBiodata(User $user, array $data): bool
+    {
+        try {
+            // Create or update biodata
+            $user->biodata()->updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'nama_depan' => $data['nama_depan'],
+                    'nama_belakang' => $data['nama_belakang'] ?? null,
+                    'tempat_lahir' => $data['tempat_lahir'],
+                    'tanggal_lahir' => $data['tanggal_lahir'],
+                    'jenis_kelamin' => $data['jenis_kelamin'],
+                    'agama' => $data['agama'] ?? null,
+                    'gol_darah' => $data['gol_darah'] ?? null,
+                    'tinggi_badan' => $data['tinggi_badan'] ?? null,
+                    'berat_badan' => $data['berat_badan'] ?? null,
+                ]
+            );
+
+            return true;
+        } catch (\Throwable $th) {
+            Log::error('Failed to save biodata: ' . $th->getMessage(), [
+                'user_id' => $user->id,
+                'exception' => $th,
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Send email verification link.
+     *
+     * @param User $user
+     * @return bool
+     */
+    public function sendVerificationEmail(User $user): bool
+    {
+        try {
+            $verificationToken = \Illuminate\Support\Str::random(64);
+            
+            // Cache token for 24 hours
+            \Illuminate\Support\Facades\Cache::put(
+                'email_verification_' . $user->id,
+                $verificationToken,
+                now()->addDay()
+            );
+
+            $verificationLink = route('auth.verify-email', [
+                'user_id' => $user->id,
+                'token' => $verificationToken,
+            ]);
+
+            Mail::send(new VerifyEmailMail($user, $verificationLink));
+            
+            return true;
+        } catch (\Throwable $th) {
+            Log::error('Failed to send verification email: ' . $th->getMessage(), [
+                'user_id' => $user->id,
+                'exception' => $th,
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Verify email token.
+     *
+     * @param User $user
+     * @param string $token
+     * @return bool
+     */
+    public function verifyEmail(User $user, string $token): bool
+    {
+        try {
+            $cachedToken = \Illuminate\Support\Facades\Cache::get('email_verification_' . $user->id);
+
+            if (!$cachedToken || $cachedToken !== $token) {
+                return false;
+            }
+
+            // Update user email_verified_at and fst_setup
+            // fst_setup = 0 berarti setup sudah selesai/tidak aktif
+            $user->update([
+                'email_verified_at' => now(),
+                'fst_setup' => 0,
+            ]);
+
+            // Clear cached token
+            \Illuminate\Support\Facades\Cache::forget('email_verification_' . $user->id);
+
+            return true;
+        } catch (\Throwable $th) {
+            Log::error('Failed to verify email: ' . $th->getMessage(), [
                 'user_id' => $user->id,
                 'exception' => $th,
             ]);

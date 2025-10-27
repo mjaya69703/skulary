@@ -1,19 +1,14 @@
 <?php
 
-namespace App\Mail;
+namespace App\Mail\Auth;
 
 use App\Models\User;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
 
-class ForgotPasswordMail extends Mailable implements ShouldQueue
+class ForgotPasswordMail extends Mailable
 {
-    use Queueable, SerializesModels;
-
     public function __construct(
         public User $user,
         public string $resetLink,
@@ -23,6 +18,7 @@ class ForgotPasswordMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
+            to: $this->user->email,
             subject: 'Reset Your Password - Skulary',
         );
     }

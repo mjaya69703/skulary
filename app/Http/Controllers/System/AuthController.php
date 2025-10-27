@@ -11,8 +11,11 @@ use Illuminate\Support\Str;
 // SRP Modules
 use App\Http\Requests\System\AuthRequest;
 use App\Http\Requests\System\RegisterRequest;
+use App\Http\Requests\System\FirstSetupRequest;
 use App\Services\System\AuthService;
 use App\Mail\Auth\ForgotPasswordMail;
+use App\Mail\Auth\WelcomeMail;
+use App\Mail\Auth\VerifyEmailMail;
 // Use Models
 use App\Models\User;
 
@@ -80,7 +83,13 @@ class AuthController extends Controller
             
             $user = $result['user'];
             
-            // Check if user has multiple roles
+            // PERTAMA: Check if user needs to complete first setup
+            // fst_setup = 1 berarti belum setup biodata
+            if ($user->fst_setup == 1) {
+                return redirect()->route('auth.first-setup')->with('info', 'Please complete your profile setup first.');
+            }
+            
+            // KEDUA: Check if user has multiple roles
             if ($authService->hasMultipleRoles($user)) {
                 // Redirect to role selection gateway
                 return redirect()->route('auth.gateway-choose');
@@ -230,5 +239,117 @@ class AuthController extends Controller
         return redirect()
             ->route('auth.signin-index')
             ->with('success', 'Password reset successfully! Please login with your new password.');
+    }
+
+    public function firstSetup()
+    {
+        $user = Auth::user();
+
+        // Redirect if already completed setup (fst_setup = 0 berarti sudah setup)
+        if ($user->fst_setup == 0) {
+            return redirect()->route('auth.gateway-choose');
+        }
+
+        $data['pages'] = 'First Setup Page';
+        $data['menus'] = 'Auth Menu';
+        $data['user'] = $user;
+
+        return view('themes.auth.first-setup', $data);
+    }
+
+    public function completeSetup(FirstSetupRequest $request, AuthService $authService)
+    {
+        $user = Auth::user();
+
+        // Check if already completed (fst_setup = 0 berarti sudah setup)
+        if ($user->fst_setup == 0) {
+            return redirect()->route('auth.gateway-choose');
+        }
+
+        // Save biodata with updated fields
+        $biodata = $request->only(['nama_depan', 'nama_belakang', 'tempat_lahir', 'tanggal_lahir', 'jenis_kelamin', 'agama', 'gol_darah', 'tinggi_badan', 'berat_badan']);
+        
+        if (!$authService->saveBiodata($user, $biodata)) {
+            return redirect()
+                ->back()
+                ->withErrors(['error' => 'Failed to save biodata. Please try again.'])
+                ->withInput();
+        }
+
+        // Send verification email
+        if (!$authService->sendVerificationEmail($user)) {
+            return redirect()
+                ->back()
+                ->withErrors(['error' => 'Failed to send verification email. Please try again.'])
+                ->withInput();
+        }
+
+        return redirect()
+            ->route('auth.verify-email-page')
+            ->with('success', 'Biodata saved! Check your email for verification link.');
+    }
+
+    public function verifyEmailPage()
+    {
+        $user = Auth::user();
+
+        // Redirect if already verified
+        if ($user->email_verified_at) {
+            return redirect()->route('auth.gateway-choose');
+        }
+
+        $data['pages'] = 'Verify Email Page';
+        $data['menus'] = 'Auth Menu';
+        $data['user'] = $user;
+
+        return view('themes.auth.verify-email-page', $data);
+    }
+
+    public function verifyEmail(Request $request, AuthService $authService)
+    {
+        $userId = $request->query('user_id');
+        $token = $request->query('token');
+
+        if (!$userId || !$token) {
+            return redirect()
+                ->route('auth.signin-index')
+                ->withErrors(['error' => 'Invalid verification link']);
+        }
+
+        $user = User::findOrFail($userId);
+
+        // Verify email
+        if ($authService->verifyEmail($user, $token)) {
+            Auth::guard()->login($user, true);
+
+            return redirect()
+                ->route('auth.gateway-choose')
+                ->with('success', 'Email verified successfully! Complete your profile setup.');
+        }
+
+        return redirect()
+            ->back()
+            ->withErrors(['error' => 'Invalid or expired verification link. Please request a new one.']);
+    }
+
+    public function sendVerificationEmail(AuthService $authService)
+    {
+        $user = Auth::user();
+
+        if ($user->email_verified_at) {
+            return redirect()
+                ->route('auth.gateway-choose')
+                ->with('success', 'Your email is already verified!');
+        }
+
+        if ($authService->sendVerificationEmail($user)) {
+            return redirect()
+                ->back()
+                ->with('success', 'Verification email sent! Please check your inbox.');
+        }
+
+        return redirect()
+            ->back()
+            ->withErrors(['error' => 'Failed to send verification email. Please try again.']);
     }
 }

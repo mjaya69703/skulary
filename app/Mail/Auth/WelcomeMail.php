@@ -1,29 +1,24 @@
 <?php
 
-namespace App\Mail;
+namespace App\Mail\Auth;
 
 use App\Models\User;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
 
-class ForgotPasswordMail extends Mailable implements ShouldQueue
+class WelcomeMail extends Mailable
 {
-    use Queueable, SerializesModels;
-
     public function __construct(
         public User $user,
-        public string $resetLink,
     ) {
     }
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Welcome to Skulary',
+            to: $this->user->email,
+            subject: 'Welcome to Skulary! 🎉',
         );
     }
 
@@ -33,6 +28,7 @@ class ForgotPasswordMail extends Mailable implements ShouldQueue
             view: 'emails.auth.welcome',
             with: [
                 'user' => $this->user,
+                'loginUrl' => route('auth.signin-index'),
             ]
         );
     }

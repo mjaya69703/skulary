@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'auth' => App\Http\Middleware\Authenticate::class,
             'active_role' => App\Http\Middleware\EnsureRoleIsActive::class,
+            'first_setup' => App\Http\Middleware\CheckFirstSetup::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

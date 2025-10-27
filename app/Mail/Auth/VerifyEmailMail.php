@@ -1,38 +1,35 @@
 <?php
 
-namespace App\Mail;
+namespace App\Mail\Auth;
 
 use App\Models\User;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
 
-class WelcomeMail extends Mailable implements ShouldQueue
+class VerifyEmailMail extends Mailable
 {
-    use Queueable, SerializesModels;
-
     public function __construct(
         public User $user,
+        public string $verificationLink,
     ) {
     }
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Welcome to Skulary! 🎉',
+            to: $this->user->email,
+            subject: 'Verify Your Email Address - Skulary',
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'emails.auth.welcome',
+            view: 'emails.auth.verify-email',
             with: [
                 'user' => $this->user,
-                'loginUrl' => route('auth.signin-index'),
+                'verificationLink' => $this->verificationLink,
             ]
         );
     }
