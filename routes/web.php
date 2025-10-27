@@ -6,9 +6,88 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/blank', function () {
-    $pages = 'Blank Page';
-    $menus = 'Unknown Menu';
 
-    return view('themes.blank-page', compact('pages', 'menus'));
+
+
+Route::get('/login', [App\Http\Controllers\System\AuthController::class, 'login'])->name('auth.signin-index');
+Route::get('/register', [App\Http\Controllers\System\AuthController::class, 'register'])->name('auth.signup-index');
+Route::post('/login', [App\Http\Controllers\System\AuthController::class, 'handleSignIn'])->name('auth.signin-handle');
+Route::post('/register', [App\Http\Controllers\System\AuthController::class, 'handleSignUp'])->name('auth.signup-handle');
+Route::get('/forgot-password', [App\Http\Controllers\System\AuthController::class, 'forgotPassword'])->name('auth.forgot-password');
+Route::post('/forgot-password', [App\Http\Controllers\System\AuthController::class, 'sendResetLink'])->name('auth.send-reset-link');
+Route::get('/reset-password/{token}', [App\Http\Controllers\System\AuthController::class, 'resetPassword'])->name('auth.reset-password');
+Route::post('/reset-password', [App\Http\Controllers\System\AuthController::class, 'handleResetPassword'])->name('auth.handle-reset-password');
+Route::middleware('auth')->group(function () {
+    Route::get('/gateway/choose-role', [App\Http\Controllers\System\AuthController::class, 'chooseRole'])->name('auth.gateway-choose');
+    Route::post('/gateway/set-role', [App\Http\Controllers\System\AuthController::class, 'setRole'])->name('auth.gateway-set');
+});
+Route::get('/logout', [App\Http\Controllers\System\AuthController::class, 'logout'])->name('auth.logout');
+
+// First Setup Routes (Protected by auth)
+Route::middleware('auth')->group(function () {
+    Route::get('/first-setup', [App\Http\Controllers\System\AuthController::class, 'firstSetup'])->name('auth.first-setup');
+    Route::post('/first-setup/complete', [App\Http\Controllers\System\AuthController::class, 'completeSetup'])->name('auth.complete-setup');
+    Route::get('/verify-email', [App\Http\Controllers\System\AuthController::class, 'verifyEmailPage'])->name('auth.verify-email-page');
+    Route::get('/verify-email/confirm', [App\Http\Controllers\System\AuthController::class, 'verifyEmail'])->name('auth.verify-email');
+    Route::post('/verify-email/send', [App\Http\Controllers\System\AuthController::class, 'sendVerificationEmail'])->name('auth.send-verification-email');
+});
+
+Route::middleware(['auth', 'first_setup' , 'active_role:admin'])->prefix('admin')->as('admin.')->group(function () {
+    
+    Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard-index');
+    Route::get('/blank', function () {
+        $pages = 'Blank Page';
+        $menus = 'Unknown Menu';
+
+        return view('themes.blank-page', compact('pages', 'menus'));
+    })->name('blank-index');
+
+});
+
+Route::middleware(['auth', 'first_setup', 'active_role:guru'])->prefix('guru')->as('guru.')->group(function () {
+
+    Route::get('/dashboard', [App\Http\Controllers\Guru\DashboardController::class, 'index'])->name('dashboard-index');
+    Route::get('/blank', function () {
+        $pages = 'Blank Page';
+        $menus = 'Unknown Menu';
+
+        return view('themes.blank-page', compact('pages', 'menus'));
+    })->name('blank-index');
+
+});
+
+Route::middleware(['auth', 'first_setup', 'active_role:parents'])->prefix('parents')->as('parents.')->group(function () {
+
+    Route::get('/dashboard', [App\Http\Controllers\Parents\DashboardController::class, 'index'])->name('dashboard-index');
+    Route::get('/blank', function () {
+        $pages = 'Blank Page';
+        $menus = 'Unknown Menu';
+
+        return view('themes.blank-page', compact('pages', 'menus'));
+    })->name('blank-index');
+
+});
+
+Route::middleware(['auth', 'first_setup' , 'active_role:siswa'])->prefix('siswa')->as('siswa.')->group(function () {
+
+    Route::get('/dashboard', [App\Http\Controllers\Siswa\DashboardController::class, 'index'])->name('dashboard-index');
+    Route::get('/blank', function () {
+        $pages = 'Blank Page';
+        $menus = 'Unknown Menu';
+
+        return view('themes.blank-page', compact('pages', 'menus'));
+    })->name('blank-index');
+
+});
+
+Route::middleware(['auth', 'first_setup' , 'active_role:peserta-ppdb'])->prefix('peserta-ppdb')->as('peserta-ppdb.')->group(function () {
+
+    Route::get('/dashboard', [App\Http\Controllers\Siswa\DashboardController::class, 'index'])->name('dashboard-index');
+    Route::get('/blank', function () {
+        $pages = 'Blank Page';
+        $menus = 'Unknown Menu';
+
+        return view('themes.blank-page', compact('pages', 'menus'));
+    })->name('blank-index');
+
 });
